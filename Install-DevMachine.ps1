@@ -1,41 +1,43 @@
-Param(  
-  [string]$chocolateyAppList,
-  [string]$dismAppList    
-)
+function Install-DevMachine {
+  Param(  
+    [string]$chocolateyAppList,
+    [string]$dismAppList    
+  )
 
-if ([string]::IsNullOrWhiteSpace($chocolateyAppList) -eq $false -or [string]::IsNullOrWhiteSpace($dismAppList) -eq $false) {
-  try {
-    choco config get cacheLocation
+  if ([string]::IsNullOrWhiteSpace($chocolateyAppList) -eq $false -or [string]::IsNullOrWhiteSpace($dismAppList) -eq $false) {
+    try {
+      choco config get cacheLocation
+    }
+    catch {
+      Write-Output "Chocolatey not detected, trying to install now"
+      iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+    }
   }
-  catch {
-    Write-Output "Chocolatey not detected, trying to install now"
-    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-  }
-}
 
-if ([string]::IsNullOrWhiteSpace($chocolateyAppList) -eq $false) {   
-  Write-Host "Chocolatey Apps Specified"  
+  if ([string]::IsNullOrWhiteSpace($chocolateyAppList) -eq $false) {   
+    Write-Host "Chocolatey Apps Specified"  
     
-  $appsToInstall = $chocolateyAppList -split "," | foreach { "$($_.Trim())" }
+    $appsToInstall = $chocolateyAppList -split "," | foreach { "$($_.Trim())" }
 
-  foreach ($app in $appsToInstall) {
-    Write-Host "Installing $app"
-    & choco install $app /y | Write-Output
+    foreach ($app in $appsToInstall) {
+      Write-Host "Installing $app"
+      & choco install $app /y | Write-Output
+    }
   }
-}
 
-if ([string]::IsNullOrWhiteSpace($dismAppList) -eq $false) {
-  Write-Host "DISM Features Specified"    
+  if ([string]::IsNullOrWhiteSpace($dismAppList) -eq $false) {
+    Write-Host "DISM Features Specified"    
 
-  $appsToInstall = $dismAppList -split "," | foreach { "$($_.Trim())" }
+    $appsToInstall = $dismAppList -split "," | foreach { "$($_.Trim())" }
 
-  foreach ($app in $appsToInstall) {
-    Write-Host "Installing $app"
-    & choco install $app /y /source windowsfeatures | Write-Output
+    foreach ($app in $appsToInstall) {
+      Write-Host "Installing $app"
+      & choco install $app /y /source windowsfeatures | Write-Output
+    }
   }
 }
 
 $chocolateyAppList = "git,notepadplusplus,sql-server-management-studio,dotnetcore-sdk,dotnetcore-windowshosting,nuget.commandline,postman,vscode,docker,microsoft-edge,nodejs,dotpeek,microsoftazurestorageexplorer,azure-data-studio"
 $dismAppList = "IIS-ASPNET45,IIS-CertProvider,IIS-ManagementService"
 
-Invoke-Expression "InstallApps.ps1 ""$chocolateyAppList"" ""$dismAppList"""
+Install-DevMachine "$chocolateyAppList" "$dismAppList"
